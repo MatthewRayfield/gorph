@@ -1,0 +1,18 @@
+body {
+  font: 15px monospace;
+  margin: none;
+}
+
+.item {
+    white-space: nowrap;
+}
+
+.item * {
+    display: inline-block;
+}
+
+.item .icon {
+    font-size: 20px;
+    width: 40px;
+    text-align: center;
+}

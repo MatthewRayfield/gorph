@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World!</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+      <script>
+        const icons = {
+            'i': ' ',
+            '0': '📄',
+            '1': '📁',
+        };
+
+        function extend(target, source, deep) {
+            var key;
+
+            for (key in source) {
+                if (deep && typeof source[key] == 'object' && typeof target[key] == 'object') {
+                    extend(target[key], source[key], deep);
+                }
+                else {
+                    target[key] = source[key];
+                }
+            }
+
+            return target;
+        }
+
+        function createElement(tagName, properties, children) {
+            var element = document.createElement(tagName),
+                key;
+
+            extend(element, properties, true);
+
+            if (children) {
+                children.forEach(function (child) {
+                    element.appendChild(child);
+                });
+            }
+
+            return element;
+        }
+
+        async function get(selector, host, port, type) {
+            const raw = await window.electronAPI.get(selector, host, port);
+
+            if (type == '0') {
+                document.body.innerHTML = '<pre>'+raw;
+            }
+            else {
+                const lines = raw.split('\n');
+
+                document.body.innerHTML = '';
+
+                lines.forEach(line => {
+                    const type = line.substring(0, 1);
+                    line = line.substring(1);
+                    const split = line.split('\t');
+                    const label = split[0];
+                    const selector = split[1];
+                    const host = split[2];
+                    const port = split[3];
+                    const formatted = label.replace(/ /g, '&nbsp;');
+
+                    const icon = createElement('div', {className: 'icon', innerHTML: icons[type] || type});
+                    const div = createElement('div', {className: 'item'}, [icon]);
+
+                    if (type == 'i') {
+                        const span = createElement('span', {innerHTML: formatted});
+                        div.appendChild(span);
+                    }
+                    else {
+                        const a = createElement('a', {innerHTML: formatted, href: "javascript:void(0)"});
+                        a.addEventListener('click', () => {
+                            get(selector, host, parseInt(port), type);
+                        });
+                        div.appendChild(a);
+                    }
+
+                    document.body.appendChild(div);
+                });
+            }
+        }
+
+        window.addEventListener('load', async () => {
+            get('', 'gopher.floodgap.com', 70);
+        });
+      </script>
+  </body>
+</html>
