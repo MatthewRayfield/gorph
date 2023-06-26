@@ -1,92 +1,173 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hello World!</title>
-    <link rel="stylesheet" href="index.css" />
-  </head>
-  <body>
-      <script>
-        const icons = {
-            'i': ' ',
-            '0': '📄',
-            '1': '📁',
-        };
+    <head>
+        <meta charset="UTF-8" />
+        <title>goph v0.2</title>
+        <link rel="stylesheet" href="index.css" />
+    </head>
+    <body>
+        <div id="toolbar">
+            <button id="back" disabled="true">🔙</button>
+            <input id="address-bar" />
+            <button id="go">▶️</button>
+        </div>
+        <div id="content"></div>
+        <script>
+            const toolbarElement = document.getElementById('toolbar');
+            const backButton = document.getElementById('back');
+            const addressBar = document.getElementById('address-bar');
+            const goButton = document.getElementById('go');
+            const contentElement = document.getElementById('content');
+            const icons = {
+                'i': ' ',
+                '0': '📄',
+                '1': '📁',
+            };
+            let backHistory = [];
 
-        function extend(target, source, deep) {
-            var key;
+            function extend(target, source, deep) {
+                var key;
 
-            for (key in source) {
-                if (deep && typeof source[key] == 'object' && typeof target[key] == 'object') {
-                    extend(target[key], source[key], deep);
-                }
-                else {
-                    target[key] = source[key];
-                }
-            }
-
-            return target;
-        }
-
-        function createElement(tagName, properties, children) {
-            var element = document.createElement(tagName),
-                key;
-
-            extend(element, properties, true);
-
-            if (children) {
-                children.forEach(function (child) {
-                    element.appendChild(child);
-                });
-            }
-
-            return element;
-        }
-
-        async function get(selector, host, port, type) {
-            const raw = await window.electronAPI.get(selector, host, port);
-
-            if (type == '0') {
-                document.body.innerHTML = '<pre>'+raw;
-            }
-            else {
-                const lines = raw.split('\n');
-
-                document.body.innerHTML = '';
-
-                lines.forEach(line => {
-                    const type = line.substring(0, 1);
-                    line = line.substring(1);
-                    const split = line.split('\t');
-                    const label = split[0];
-                    const selector = split[1];
-                    const host = split[2];
-                    const port = split[3];
-                    const formatted = label.replace(/ /g, '&nbsp;');
-
-                    const icon = createElement('div', {className: 'icon', innerHTML: icons[type] || type});
-                    const div = createElement('div', {className: 'item'}, [icon]);
-
-                    if (type == 'i') {
-                        const span = createElement('span', {innerHTML: formatted});
-                        div.appendChild(span);
+                for (key in source) {
+                    if (deep && typeof source[key] == 'object' && typeof target[key] == 'object') {
+                        extend(target[key], source[key], deep);
                     }
                     else {
-                        const a = createElement('a', {innerHTML: formatted, href: "javascript:void(0)"});
-                        a.addEventListener('click', () => {
-                            get(selector, host, parseInt(port), type);
-                        });
-                        div.appendChild(a);
+                        target[key] = source[key];
+                    }
+                }
+
+                return target;
+            }
+
+            function createElement(tagName, properties, children) {
+                var element = document.createElement(tagName),
+                    key;
+
+                extend(element, properties, true);
+
+                if (children) {
+                    children.forEach(function (child) {
+                        element.appendChild(child);
+                    });
+                }
+
+                return element;
+            }
+
+            async function get(selector, host, port, type) {
+                if (backHistory.length >= 1) {
+                    backHistory[backHistory.length-1].scroll = window.scrollY;
+                }
+                backHistory.push({selector, host, port, type});
+                if (backHistory.length >= 2) {
+                    backButton.disabled = false;
+                }
+                else {
+                    backButton.disabled = true;
+                }
+
+                const raw = await window.electronAPI.get(selector, host, port);
+
+                addressBar.value = host;
+                if (port != 70) {
+                    addressBar.value += ':'+port;
+                }
+                if (type != undefined) {
+                    addressBar.value += '/'+type;
+                }
+                addressBar.value += selector || '';
+
+                if (type == '0') {
+                    contentElement.innerHTML = '<pre>'+raw;
+                }
+                else {
+                    const lines = raw.split('\n');
+
+                    contentElement.innerHTML = '';
+
+                    const parsed = lines.map(line => {return line.split('\t')});
+
+                    let validCount = 0;
+                    parsed.forEach(split => {
+                        if (split.length >= 4) {
+                            validCount ++;
+                        }
+                    });
+
+                    if (validCount/parsed.length < .5) {
+                        contentElement.innerHTML = '<pre>'+raw;
+                        return;
                     }
 
-                    document.body.appendChild(div);
-                });
-            }
-        }
+                    parsed.forEach(split => {
+                        if (split.length < 4) {
+                            return;
+                        }
 
-        window.addEventListener('load', async () => {
-            get('', 'gopher.floodgap.com', 70);
-        });
-      </script>
+                        const type = split[0].substring(0, 1);
+                        split[0] = split[0].substring(1);
+                        const label = split[0];
+                        const selector = split[1];
+                        const host = split[2];
+                        const port = split[3];
+                        const formatted = label.replace(/ /g, '&nbsp;');
+
+                        const icon = createElement('div', {className: 'icon', innerHTML: icons[type] || type});
+                        const div = createElement('div', {className: 'item'}, [icon]);
+
+                        if (type == 'i') {
+                            const span = createElement('span', {innerHTML: formatted});
+                            div.appendChild(span);
+                        }
+                        else {
+                            const a = createElement('a', {innerHTML: formatted, href: "javascript:void(0)"});
+                            a.addEventListener('click', async () => {
+                                await get(selector, host, parseInt(port), type);
+                                window.scrollTo(0, 0);
+                            });
+                            div.appendChild(a);
+                        }
+
+                        contentElement.appendChild(div);
+                    });
+                }
+            }
+
+            async function back() {
+                backHistory.pop();
+                const dat = backHistory.pop();
+
+                if (!dat) return;
+
+                await get(dat.selector, dat.host, dat.port, dat.type);
+
+                window.scroll(0, dat.scroll || 0);
+            }
+
+            async function go() {
+                const url = addressBar.value;
+                const match = (/(gopher:\/\/)?([^:\/]+):?([0-9]+)?\/?([0-9]+)?(\/?.+)?/).exec(url);
+
+                const host = match[2];
+                const port = parseInt(match[3]) || 70;
+                const type = match[4];
+                let selector = match[5];
+                if (selector && selector[0] != '/') {
+                    selector = '/'+selector;
+                }
+
+                await get(selector, host, port, type);
+                window.scrollTo(0, 0);
+            }
+
+            backButton.addEventListener('click', back);
+            addressBar.addEventListener('click', () => {addressBar.select();});
+            goButton.addEventListener('click', go);
+            
+            window.addEventListener('load', async () => {
+                get('', 'gopher.floodgap.com', 70);
+            });
+        </script>
   </body>
 </html>

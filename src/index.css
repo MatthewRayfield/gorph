@@ -3,6 +3,38 @@ body {
   margin: none;
 }
 
+#toolbar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 30px;
+    background: #ccc;
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+    border-bottom: 1px solid #aaa;
+}
+
+#toolbar button {
+    font-size: 20px;
+    width: 30px;
+    border: none;
+}
+
+#toolbar button:enabled:hover {
+    background: #aaa;
+}
+
+#address-bar {
+    width: 50%;
+    border: none;
+}
+
+#content {
+    margin-top: 40px;
+}
+
 .item {
     white-space: nowrap;
 }
