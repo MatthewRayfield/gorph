@@ -1,5 +1,6 @@
+const fs = require('fs');
 const net = require('net');
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 
 if (require('electron-squirrel-startup')) {
@@ -32,7 +33,7 @@ app.on('activate', () => {
     }
 });
 
-function get(selector, domain, port) {
+function get(selector, domain, port, file) {
     return new Promise((accept, reject) => {
         const socket = net.createConnection({
             host: domain,
@@ -40,24 +41,50 @@ function get(selector, domain, port) {
         });
 
         socket.setTimeout(1000);
-        socket.setEncoding('utf8');
 
-        selector = selector || '';
-        socket.on('connect', () => {
-            socket.write(selector+'\r\n');
-        });
+        if (!file) {
+            socket.setEncoding('utf8');
 
-        let body = '';
-        socket.on('data', data => {
-            body += data;
-        });
+            selector = selector || '';
+            socket.on('connect', () => {
+                socket.write(selector+'\r\n');
+            });
 
-        socket.on('close', () => {
-            accept(body);
-        });
+            let body = '';
+            socket.on('data', data => {
+                body += data;
+            });
+
+            socket.on('close', () => {
+                accept(body);
+            });
+        }
+        else {
+            console.log(file);
+
+            selector = selector || '';
+            socket.on('connect', () => {
+                socket.write(selector+'\r\n');
+            });
+
+            let fileBuffer;
+            socket.on('data', data => {
+                if (!fileBuffer) {
+                    fileBuffer = data;
+                }
+                else {
+                    fileBuffer = Buffer.concat([fileBuffer, data]);
+                }
+            });
+
+            socket.on('close', () => {
+                fs.writeFileSync(file, fileBuffer);
+                shell.openPath(file);
+            });
+        }
     });
 }
 
-ipcMain.handle('get', async (event, selector, domain, port) => {
-    return get(selector, domain, port);
+ipcMain.handle('get', async (event, selector, domain, port, file) => {
+    return get(selector, domain, port, file);
 });

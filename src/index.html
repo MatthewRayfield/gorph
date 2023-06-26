@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>goph v0.2</title>
+        <title>goph v0.3</title>
         <link rel="stylesheet" href="index.css" />
     </head>
     <body>
@@ -22,6 +22,14 @@
                 'i': ' ',
                 '0': '📄',
                 '1': '📁',
+                '3': ' ',
+                'I': '🏙️',
+                'g': '🌆',
+                ':': '🌃',
+                '9': '📗',
+                '5': '📕',
+                '6': '📘',
+                '4': '📙',
             };
             let backHistory = [];
 
@@ -56,6 +64,11 @@
             }
 
             async function get(selector, host, port, type) {
+                if (type && type != '0' && type != '1') {
+                    await window.electronAPI.get(selector, host, port, selector.split('/').pop());
+                    return;
+                }
+
                 if (backHistory.length >= 1) {
                     backHistory[backHistory.length-1].scroll = window.scrollY;
                 }
@@ -116,7 +129,7 @@
                         const icon = createElement('div', {className: 'icon', innerHTML: icons[type] || type});
                         const div = createElement('div', {className: 'item'}, [icon]);
 
-                        if (type == 'i') {
+                        if (type == 'i' || type == '3') {
                             const span = createElement('span', {innerHTML: formatted});
                             div.appendChild(span);
                         }
