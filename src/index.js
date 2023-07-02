@@ -1,6 +1,6 @@
 const fs = require('fs');
 const net = require('net');
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, globalShortcut } = require('electron');
 const path = require('path');
 
 if (require('electron-squirrel-startup')) {
@@ -8,18 +8,41 @@ if (require('electron-squirrel-startup')) {
 }
 
 const createWindow = () => {
-    const mainWindow = new BrowserWindow({
+    const options = {
         width: 800,
         height: 600,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
         },
+    };
+
+    const windows = BrowserWindow.getAllWindows().reverse();
+    let latestWindow;
+    windows.forEach(window => {
+        if (window.isVisible) {
+            latestWindow = window;
+        }
     });
 
+    if (latestWindow) {
+        const position = latestWindow.getPosition();
+        options.x = position[0] + 20;
+        options.y = position[1] + 20;
+    }
+
+    const mainWindow = new BrowserWindow(options);
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
+
+    windows.push(mainWindow);
 };
 
-app.on('ready', createWindow);
+app.on('ready', () => {
+    createWindow();
+
+    globalShortcut.register('CommandOrControl+N', () => {
+        createWindow();
+    });
+});
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -40,9 +63,8 @@ function get(selector, domain, port, file) {
             port: port
         });
 
-        socket.setTimeout(1000);
-
         if (!file) {
+            socket.setTimeout(10000);
             socket.setEncoding('utf8');
 
             selector = selector || '';
@@ -57,6 +79,16 @@ function get(selector, domain, port, file) {
 
             socket.on('close', () => {
                 accept(body);
+            });
+
+            socket.on('timeout', () => {
+                socket.end();
+                reject('timeout');
+            }); 
+
+            socket.on('error', error => {
+                console.log(error);
+                reject(error);
             });
         }
         else {

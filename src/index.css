@@ -1,3 +1,7 @@
+textarea:focus, input:focus{
+    outline: none;
+}
+
 body {
   font: 15px monospace;
   margin: none;
@@ -27,8 +31,10 @@ body {
 }
 
 #address-bar {
+    flex-grow: 1;
     width: 50%;
     border: none;
+    text-align: center;
 }
 
 #content {

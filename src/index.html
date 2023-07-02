@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>goph v0.3</title>
+        <title>goph v0.4</title>
         <link rel="stylesheet" href="index.css" />
     </head>
     <body>
@@ -32,6 +32,7 @@
                 '4': '📙',
             };
             let backHistory = [];
+            let loading = false;
 
             function extend(target, source, deep) {
                 var key;
@@ -63,11 +64,63 @@
                 return element;
             }
 
+            function animateLoading() {
+                const i = Math.floor(Date.now()/100);
+
+                goButton.innerHTML = [
+                    '🕛',
+                    '🕐',
+                    '🕑',
+                    '🕒',
+                    '🕓',
+                    '🕔',
+                    '🕕',
+                    '🕖',
+                    '🕗',
+                    '🕘',
+                    '🕙',
+                    '🕚'
+                ][i % 12];
+
+                if (loading) {
+                    setTimeout(animateLoading, 1000/60);
+                }
+                else {
+                    goButton.innerHTML = '▶️';
+                }
+            }
+
             async function get(selector, host, port, type) {
-                if (type && type != '0' && type != '1') {
-                    await window.electronAPI.get(selector, host, port, selector.split('/').pop());
+                if (loading) {
                     return;
                 }
+
+                if (type && type != '0' && type != '1') {
+                    try {
+                        await window.electronAPI.get(selector, host, port, selector.split('/').pop());
+                    }
+                    catch (e) {
+                        alert(e);
+                    }
+
+                    return;
+                }
+
+                loading = true;
+                animateLoading();
+
+                let raw;
+                try {
+                    raw = await window.electronAPI.get(selector, host, port);
+                    loading = false;
+                }
+                catch (e) {
+                    alert(e);
+                    loading = false;
+                    return;
+                }
+                let clean = raw.replace(/</g, '&lt;');
+                clean = clean.replace(/>/g, '&gt;');
 
                 if (backHistory.length >= 1) {
                     backHistory[backHistory.length-1].scroll = window.scrollY;
@@ -80,7 +133,6 @@
                     backButton.disabled = true;
                 }
 
-                const raw = await window.electronAPI.get(selector, host, port);
 
                 addressBar.value = host;
                 if (port != 70) {
@@ -92,7 +144,7 @@
                 addressBar.value += selector || '';
 
                 if (type == '0') {
-                    contentElement.innerHTML = '<pre>'+raw;
+                    contentElement.innerHTML = '<pre>'+clean;
                 }
                 else {
                     const lines = raw.split('\n');
@@ -100,18 +152,6 @@
                     contentElement.innerHTML = '';
 
                     const parsed = lines.map(line => {return line.split('\t')});
-
-                    let validCount = 0;
-                    parsed.forEach(split => {
-                        if (split.length >= 4) {
-                            validCount ++;
-                        }
-                    });
-
-                    if (validCount/parsed.length < .5) {
-                        contentElement.innerHTML = '<pre>'+raw;
-                        return;
-                    }
 
                     parsed.forEach(split => {
                         if (split.length < 4) {
@@ -160,12 +200,12 @@
 
             async function go() {
                 const url = addressBar.value;
-                const match = (/(gopher:\/\/)?([^:\/]+):?([0-9]+)?\/?([0-9]+)?(\/?.+)?/).exec(url);
+                const match = (/(gopher:\/\/)?([^:\/]+):?([0-9]+)?(\/(.)(\/?.+))?/).exec(url);
 
                 const host = match[2];
                 const port = parseInt(match[3]) || 70;
-                const type = match[4];
-                let selector = match[5];
+                const type = match[5];
+                let selector = match[6];
                 if (selector && selector[0] != '/') {
                     selector = '/'+selector;
                 }
@@ -173,6 +213,13 @@
                 await get(selector, host, port, type);
                 window.scrollTo(0, 0);
             }
+
+            window.addEventListener('keypress', e => {
+                if (document.activeElement == addressBar && e.which == 13) {
+                    addressBar.blur();
+                    go();
+                }
+            });
 
             backButton.addEventListener('click', back);
             addressBar.addEventListener('click', () => {addressBar.select();});
