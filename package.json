@@ -1,7 +1,7 @@
 {
   "name": "gorph",
   "productName": "gorph",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "a gopher browser called gorph",
   "main": "src/main.js",
   "scripts": {

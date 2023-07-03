@@ -15,9 +15,11 @@ const icons = {
     '5': '📕',
     '6': '📘',
     '4': '📙',
+    '7': '🔎',
 };
 let backHistory = [];
 let loading = false;
+let searchButton;
 
 function extend(target, source, deep) {
     var key;
@@ -80,15 +82,34 @@ async function get(selector, host, port, type) {
         return;
     }
 
-    if (type && type != '0' && type != '1') {
-        try {
-            await window.electronAPI.get(selector, host, port, selector.split('/').pop());
+    if (type == '7') {
+        if (selector.indexOf('\t') == -1) {
+            const searchInput = createElement('input');
+            const searchLabel = createElement('label', {innerHTML: 'enter request query:'});
+            searchButton = createElement('button', {innerHTML: 'search'});
+            searchButton.addEventListener('click', () => {
+                get(selector +'\t'+ searchInput.value, host, port, type);
+            });
+            const searchBox = createElement('div', {className: 'search'}, [searchLabel, searchInput, searchButton]);
+            contentElement.innerHTML = '';
+            contentElement.appendChild(searchBox);
+            searchInput.focus();
+            return;
         }
-        catch (e) {
-            alert(e);
-        }
+    }
+    else {
+        searchButton = undefined;
 
-        return;
+        if (type && type != '0' && type != '1') {
+            try {
+                await window.electronAPI.get(selector, host, port, selector.split('/').pop());
+            }
+            catch (e) {
+                alert(e);
+            }
+
+            return;
+        }
     }
 
     loading = true;
@@ -200,9 +221,14 @@ async function go() {
 }
 
 window.addEventListener('keypress', e => {
-    if (document.activeElement == addressBar && e.which == 13) {
-        addressBar.blur();
-        go();
+    if (e.which == 13) {
+        if (document.activeElement == addressBar) {
+            addressBar.blur();
+            go();
+        }
+        else if (searchButton) {
+            searchButton.click();
+        }
     }
 });
 

@@ -92,8 +92,6 @@ function get(selector, domain, port, file) {
             });
         }
         else {
-            console.log(file);
-
             selector = selector || '';
             socket.on('connect', () => {
                 socket.write(selector+'\r\n');
@@ -112,6 +110,7 @@ function get(selector, domain, port, file) {
             socket.on('close', () => {
                 fs.writeFileSync(file, fileBuffer);
                 shell.openPath(file);
+                accept();
             });
         }
     });

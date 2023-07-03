@@ -54,3 +54,13 @@ body {
     width: 40px;
     text-align: center;
 }
+
+#content .search {
+    display: flex;
+}
+
+#content .search input {
+    flex-grow: 1;
+    margin: 0 10px;
+    max-width: 500px;
+}
