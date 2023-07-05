@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>gorph v0.6</title>
+        <title>gorph v0.7</title>
         <link rel="stylesheet" href="index.css" />
     </head>
     <body>
@@ -10,8 +10,20 @@
             <button id="back" disabled="true">🔙</button>
             <input id="address-bar" />
             <button id="go">▶️</button>
+            <button id="home">🏠</button>
+            <button id="bookmarks">📚</button>
+            <!--<button id="downloads">📦</button>
+            <button id="settings">🛠️</button>-->
         </div>
         <div id="content"></div>
+        <div id="bookmarks-menu">
+            <div class="header">
+                <h3>bookmarks:</h3>
+            </div>
+            <div id="bookmarks-list"></div>
+            <button id="add-bookmark">➕</button>
+        </div>
+
         <script src="index.js"></script>
   </body>
 </html>

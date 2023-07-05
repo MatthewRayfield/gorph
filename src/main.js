@@ -112,6 +112,16 @@ function get(selector, domain, port, file) {
                 shell.openPath(file);
                 accept();
             });
+
+            socket.on('timeout', () => {
+                socket.end();
+                reject('timeout');
+            }); 
+
+            socket.on('error', error => {
+                console.log(error);
+                reject(error);
+            });
         }
     });
 }

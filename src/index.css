@@ -1,18 +1,24 @@
+:root {
+    --toolbar-height: 30px;
+    --menu-header-height: 30px;
+}
+
 textarea:focus, input:focus{
     outline: none;
 }
 
 body {
   font: 15px monospace;
-  margin: none;
+  margin: 0;
 }
 
 #toolbar {
     position: fixed;
     left: 0;
     top: 0;
+    z-index: 10;
     width: 100vw;
-    height: 30px;
+    height: var(--toolbar-height);
     background: #ccc;
     display: flex;
     justify-content: flex-start;
@@ -38,7 +44,12 @@ body {
 }
 
 #content {
-    margin-top: 40px;
+    position: absolute;
+    top: calc(var(--toolbar-height) + 1px);
+    padding: 10px 0;
+    width: 100vw;
+    height: calc(100vh - var(--toolbar-height) - 21px);
+    overflow: scroll;
 }
 
 .item {
@@ -55,6 +66,11 @@ body {
     text-align: center;
 }
 
+#content pre {
+    white-space: pre-wrap;
+    padding: 0 10px;
+}
+
 #content .search {
     display: flex;
 }
@@ -63,4 +79,52 @@ body {
     flex-grow: 1;
     margin: 0 10px;
     max-width: 500px;
+}
+
+#bookmarks-menu {
+    display: none;
+    position: absolute;
+    top: calc(var(--toolbar-height) + 1px);
+    right: 0;
+    height: calc(100vh - var(--toolbar-height) - 1px);
+    background: #ddd;
+    border-left: 1px solid #aaa;
+    min-width: 40vw;
+    max-width: 90vw;
+    overflow: scroll;
+}
+
+#bookmarks-menu button {
+    margin: 3px;
+}
+
+#bookmarks-menu .header {
+    display: flex;
+    justify-content: space-between;
+    height: var(--menu-header-height);
+    width: 100%;
+}
+
+#bookmarks-menu h3 {
+    margin: 5px;
+}
+
+#bookmarks-menu .bookmark {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px;
+}
+
+#bookmarks-menu .bookmark:nth-child(odd) {
+    background: #ccc;
+}
+
+#bookmarks-menu .bookmark .button-box {
+    margin-left: 10px;
+    opacity: 0;
+}
+
+#bookmarks-menu .bookmark:hover .button-box {
+    opacity: 1;
 }

@@ -2,7 +2,12 @@ const toolbarElement = document.getElementById('toolbar');
 const backButton = document.getElementById('back');
 const addressBar = document.getElementById('address-bar');
 const goButton = document.getElementById('go');
+const homeButton = document.getElementById('home');
+const bookmarksButton = document.getElementById('bookmarks');
 const contentElement = document.getElementById('content');
+const bookmarksMenu = document.getElementById('bookmarks-menu');
+const bookmarksList = document.getElementById('bookmarks-list');
+const addBookmarkButton = document.getElementById('add-bookmark');
 const icons = {
     'i': ' ',
     '0': '📄',
@@ -20,6 +25,8 @@ const icons = {
 let backHistory = [];
 let loading = false;
 let searchButton;
+let currentUrl;
+const defaultBookmarks = ['gopher.floodgap.com', 'quux.org', 'zaibatsu.circumlunar.space'];
 
 function extend(target, source, deep) {
     var key;
@@ -49,6 +56,53 @@ function createElement(tagName, properties, children) {
     }
 
     return element;
+}
+
+function renderBookmarks() {
+    let bookmarks;
+    try {bookmarks = JSON.parse(localStorage.getItem('bookmarks'));}
+    catch (e) {}
+
+    if (!bookmarks) {
+        bookmarks = defaultBookmarks;
+    }
+
+    bookmarksList.innerHTML = '';
+    bookmarks.forEach((url, i) => {
+        const link = createElement('a', {innerHTML: url, href: 'javascript:void(0)'});
+        const span = createElement('span', {}, [link]);
+        if (i == 0) {
+            span.innerHTML += '&nbsp;🏠';
+        }
+        const element = createElement('div', {className: 'bookmark'}, [span]);
+        const upButton = createElement('button', {innerHTML: '⬆️'});
+        upButton.addEventListener('click', e => {
+            e.stopPropagation();
+            if (i == 0) {return;}
+            bookmarks.splice(i-1, 2, url, bookmarks[i-1]);
+            localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+            renderBookmarks();
+        });
+        const downButton = createElement('button', {innerHTML: '⬇️'});
+        downButton.addEventListener('click', e => {
+            e.stopPropagation();
+            if (i == bookmarks.length - 1) {return;}
+            bookmarks.splice(i, 2, bookmarks[i+1], url);
+            localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+            renderBookmarks();
+        });
+        const deleteButton = createElement('button', {innerHTML: '✖️'});
+        deleteButton.addEventListener('click', e => {
+            e.stopPropagation();
+            bookmarks.splice(i, 1);
+            localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+            renderBookmarks();
+        });
+        const buttonBox = createElement('div', {className: 'button-box'}, [upButton, downButton, deleteButton]);
+        element.appendChild(buttonBox);
+        element.addEventListener('click', () => {go(url);});
+        bookmarksList.appendChild(element);
+    });
 }
 
 function animateLoading() {
@@ -127,9 +181,10 @@ async function get(selector, host, port, type) {
     }
     let clean = raw.replace(/</g, '&lt;');
     clean = clean.replace(/>/g, '&gt;');
+    clean = clean.replace(/gopher:\/\/[^ \n$]+/g, "<a href=\"javascript:go('$&')\">$&</a>");
 
     if (backHistory.length >= 1) {
-        backHistory[backHistory.length-1].scroll = window.scrollY;
+        backHistory[backHistory.length-1].scroll = contentElement.scrollTop;
     }
     backHistory.push({selector, host, port, type});
     if (backHistory.length >= 2) {
@@ -140,14 +195,15 @@ async function get(selector, host, port, type) {
     }
 
 
-    addressBar.value = host;
+    currentUrl = host;
     if (port != 70) {
-        addressBar.value += ':'+port;
+        currentUrl += ':'+port;
     }
     if (type != undefined) {
-        addressBar.value += '/'+type;
+        currentUrl += '/'+type;
     }
-    addressBar.value += selector || '';
+    currentUrl += selector || '';
+    addressBar.value = currentUrl;
 
     if (type == '0') {
         contentElement.innerHTML = '<pre>'+clean;
@@ -183,7 +239,6 @@ async function get(selector, host, port, type) {
                 const a = createElement('a', {innerHTML: formatted, href: "javascript:void(0)"});
                 a.addEventListener('click', async () => {
                     await get(selector, host, parseInt(port), type);
-                    window.scrollTo(0, 0);
                 });
                 div.appendChild(a);
             }
@@ -191,6 +246,8 @@ async function get(selector, host, port, type) {
             contentElement.appendChild(div);
         });
     }
+
+    contentElement.scrollTop = 0;
 }
 
 async function back() {
@@ -201,11 +258,11 @@ async function back() {
 
     await get(dat.selector, dat.host, dat.port, dat.type);
 
-    window.scroll(0, dat.scroll || 0);
+    contentElement.scrollTop = dat.scroll || 0;
 }
 
-async function go() {
-    const url = addressBar.value;
+async function go(url) {
+    url = url || addressBar.value;
     const match = (/(gopher:\/\/)?([^:\/]+):?([0-9]+)?(\/(.)(\/?.+))?/).exec(url);
 
     const host = match[2];
@@ -235,7 +292,36 @@ window.addEventListener('keypress', e => {
 backButton.addEventListener('click', back);
 addressBar.addEventListener('click', () => {addressBar.select();});
 goButton.addEventListener('click', go);
+homeButton.addEventListener('click', () => {
+    let bookmarks;
+    try {bookmarks = JSON.parse(localStorage.getItem('bookmarks'));}
+    catch (e) {}
+    if (!bookmarks) {
+        bookmarks = defaultBookmarks;
+    }
+    go(bookmarks[0]);
+});
+bookmarksButton.addEventListener('click', () => {
+    if (bookmarksMenu.style.display == 'block') {
+        bookmarksMenu.style.display = 'none';
+    }
+    else {
+        renderBookmarks();
+        bookmarksMenu.style.display = 'block';
+    }
+});
+addBookmarkButton.addEventListener('click', () => {
+    let bookmarks;
+    try {bookmarks = JSON.parse(localStorage.getItem('bookmarks'));}
+    catch (e) {}
+    if (!bookmarks) {
+        bookmarks = defaultBookmarks;
+    }
+    bookmarks.push(currentUrl);
+    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    renderBookmarks();
+});
 
 window.addEventListener('load', async () => {
-    get('', 'gopher.floodgap.com', 70);
+    homeButton.click();
 });
