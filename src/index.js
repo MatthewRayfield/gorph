@@ -155,11 +155,29 @@ async function get(selector, host, port, type) {
         searchButton = undefined;
 
         if (type && type != '0' && type != '1') {
+            let buffer;
+
             try {
-                await window.electronAPI.get(selector, host, port, selector.split('/').pop());
+                buffer = await window.electronAPI.get(selector, host, port, true);
             }
             catch (e) {
                 alert(e);
+            }
+
+            const blob = new Blob([buffer], {type: "octet/stream"});
+            const url = window.URL.createObjectURL(blob);
+
+            if ('Ig:'.indexOf(type) > -1) {
+                const image = createElement('img', {src: url});
+                contentElement.innerHTML = '';
+                contentElement.appendChild(image);
+            }
+            else {
+                const filename = selector.split('/').pop();
+                const a = createElement('a', {style: 'display: none', href: url, download: filename});
+                contentElement.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
             }
 
             return;
@@ -290,7 +308,9 @@ window.addEventListener('keypress', e => {
 });
 
 backButton.addEventListener('click', back);
-addressBar.addEventListener('click', () => {addressBar.select();});
+addressBar.addEventListener('focus', () => {
+    addressBar.select();
+});
 goButton.addEventListener('click', go);
 homeButton.addEventListener('click', () => {
     let bookmarks;

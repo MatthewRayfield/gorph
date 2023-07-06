@@ -63,14 +63,25 @@ function get(selector, domain, port, file) {
             port: port
         });
 
-        if (!file) {
-            socket.setTimeout(10000);
-            socket.setEncoding('utf8');
+        socket.setTimeout(10000);
+        selector = selector || '';
 
-            selector = selector || '';
-            socket.on('connect', () => {
-                socket.write(selector+'\r\n');
-            });
+        socket.on('connect', () => {
+            socket.write(selector+'\r\n');
+        });
+
+        socket.on('timeout', () => {
+            socket.end();
+            reject('timeout');
+        });
+
+        socket.on('error', error => {
+            console.log(error);
+            reject(error);
+        });
+
+        if (!file) {
+            socket.setEncoding('utf8');
 
             let body = '';
             socket.on('data', data => {
@@ -80,23 +91,8 @@ function get(selector, domain, port, file) {
             socket.on('close', () => {
                 accept(body);
             });
-
-            socket.on('timeout', () => {
-                socket.end();
-                reject('timeout');
-            }); 
-
-            socket.on('error', error => {
-                console.log(error);
-                reject(error);
-            });
         }
         else {
-            selector = selector || '';
-            socket.on('connect', () => {
-                socket.write(selector+'\r\n');
-            });
-
             let fileBuffer;
             socket.on('data', data => {
                 if (!fileBuffer) {
@@ -108,19 +104,7 @@ function get(selector, domain, port, file) {
             });
 
             socket.on('close', () => {
-                fs.writeFileSync(file, fileBuffer);
-                shell.openPath(file);
-                accept();
-            });
-
-            socket.on('timeout', () => {
-                socket.end();
-                reject('timeout');
-            }); 
-
-            socket.on('error', error => {
-                console.log(error);
-                reject(error);
+                accept(fileBuffer);
             });
         }
     });

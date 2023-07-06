@@ -71,6 +71,10 @@ body {
     padding: 0 10px;
 }
 
+#content img {
+    max-width: 100vw;
+}
+
 #content .search {
     display: flex;
 }
