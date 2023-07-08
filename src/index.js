@@ -341,6 +341,18 @@ addBookmarkButton.addEventListener('click', () => {
     localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
     renderBookmarks();
 });
+window.electronAPI.on('address-bar', () => {addressBar.focus();});
+window.electronAPI.on('font', (event, change) => {
+    let fontSize = parseInt(document.body.style.fontSize) || 15;
+
+    if (change == '+') fontSize += 2;
+    else if (change == '-') fontSize -= 2;
+    else if (change == '0') fontSize = 15;
+
+    document.body.style.fontSize = fontSize + 'px';
+});
+window.electronAPI.on('home', () => {homeButton.click();});
+window.electronAPI.on('bookmarks', () => {bookmarksButton.click();});
 
 window.addEventListener('load', async () => {
     homeButton.click();

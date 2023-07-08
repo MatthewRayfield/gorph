@@ -8,8 +8,8 @@ textarea:focus, input:focus{
 }
 
 body {
-  font: 15px monospace;
-  margin: 0;
+    font: 15px monospace;
+    margin: 0;
 }
 
 #toolbar {

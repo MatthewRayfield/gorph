@@ -1,6 +1,6 @@
 const fs = require('fs');
 const net = require('net');
-const { app, BrowserWindow, ipcMain, shell, globalShortcut } = require('electron');
+const {app, BrowserWindow, ipcMain, Menu, MenuItem} = require('electron');
 const path = require('path');
 
 if (require('electron-squirrel-startup')) {
@@ -16,32 +16,130 @@ const createWindow = () => {
         },
     };
 
-    const windows = BrowserWindow.getAllWindows().reverse();
-    let latestWindow;
-    windows.forEach(window => {
-        if (window.isVisible) {
-            latestWindow = window;
-        }
-    });
-
-    if (latestWindow) {
-        const position = latestWindow.getPosition();
+    const focusedWindow = BrowserWindow.getFocusedWindow();
+    if (focusedWindow) {
+        const position = focusedWindow.getPosition();
         options.x = position[0] + 20;
         options.y = position[1] + 20;
     }
 
     const mainWindow = new BrowserWindow(options);
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
-
-    windows.push(mainWindow);
 };
 
 app.on('ready', () => {
     createWindow();
 
-    globalShortcut.register('CommandOrControl+N', () => {
-        createWindow();
-    });
+    const menu = new Menu();
+    menu.append(new MenuItem({
+        submenu: [
+            {
+                label: "About Application",
+                selector: "orderFrontStandardAboutPanel:"
+            },
+            {type: "separator"},
+            {
+                label: 'New window',
+                accelerator: process.platform === 'darwin' ? 'Cmd+N' : 'Ctrl+N',
+                click: () => {
+                    createWindow();
+                }
+            },
+            {
+                label: 'Close window',
+                accelerator: process.platform === 'darwin' ? 'Cmd+W' : 'Ctrl+W',
+                click: () => {
+                    const focusedWindow = BrowserWindow.getFocusedWindow();
+                    if (focusedWindow) focusedWindow.close();
+                }
+            },
+            {
+                label: 'Focus address bar',
+                accelerator: process.platform === 'darwin' ? 'Cmd+L' : 'Ctrl+L',
+                click: () => {
+                    const focusedWindow = BrowserWindow.getFocusedWindow();
+                    if (focusedWindow) focusedWindow.webContents.send('address-bar');
+                }
+            },
+            {
+                label: 'Increase font size',
+                accelerator: process.platform === 'darwin' ? 'Cmd+=' : 'Ctrl+=',
+                click: () => {
+                    const focusedWindow = BrowserWindow.getFocusedWindow();
+                    if (focusedWindow) focusedWindow.webContents.send('font', '+');
+                }
+            },
+            {
+                label: 'Decrease font size',
+                accelerator: process.platform === 'darwin' ? 'Cmd+-' : 'Ctrl+-',
+                click: () => {
+                    const focusedWindow = BrowserWindow.getFocusedWindow();
+                    if (focusedWindow) focusedWindow.webContents.send('font', '-');
+                }
+            },
+            {
+                label: 'Default font size',
+                accelerator: process.platform === 'darwin' ? 'Cmd+0' : 'Ctrl+0',
+                click: () => {
+                    const focusedWindow = BrowserWindow.getFocusedWindow();
+                    if (focusedWindow) focusedWindow.webContents.send('font', '0');
+                }
+            },
+            {
+                label: 'Refresh',
+                accelerator: process.platform === 'darwin' ? 'Cmd+R' : 'Ctrl+R',
+                click: () => {
+                    const focusedWindow = BrowserWindow.getFocusedWindow();
+                    if (focusedWindow) focusedWindow.loadFile(path.join(__dirname, 'index.html'));
+                }
+            },
+            {
+                label: 'Home',
+                accelerator: process.platform === 'darwin' ? 'Cmd+H' : 'Ctrl+H',
+                click: () => {
+                    const focusedWindow = BrowserWindow.getFocusedWindow();
+                    if (focusedWindow) focusedWindow.webContents.send('home');
+                }
+            },
+            {
+                label: 'Bookmarks',
+                accelerator: process.platform === 'darwin' ? 'Cmd+B' : 'Ctrl+B',
+                click: () => {
+                    const focusedWindow = BrowserWindow.getFocusedWindow();
+                    if (focusedWindow) focusedWindow.webContents.send('bookmarks');
+                }
+            },
+            {
+                label: 'Toggle devtools',
+                accelerator: process.platform === 'darwin' ? 'Cmd+D' : 'Ctrl+D',
+                click: () => {
+                    const focusedWindow = BrowserWindow.getFocusedWindow();
+                    if (focusedWindow) focusedWindow.webContents.toggleDevTools();
+                }
+            },
+            {type: "separator"},
+            {
+                label: 'Quit',
+                accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
+                click: () => {
+                    app.quit();
+                }
+            },
+        ]
+    }));
+    menu.append(new MenuItem({
+        label: "Edit",
+        submenu: [
+            {label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:"},
+            {label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:"},
+            {type: "separator"},
+            {label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:"},
+            {label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:"},
+            {label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:"},
+            {label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:"}
+        ]
+    }));
+    Menu.setApplicationMenu(menu);
 });
 
 app.on('window-all-closed', () => {
