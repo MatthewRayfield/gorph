@@ -127,6 +127,7 @@ body {
 #bookmarks-menu .bookmark .button-box {
     margin-left: 10px;
     opacity: 0;
+    white-space: nowrap;
 }
 
 #bookmarks-menu .bookmark:hover .button-box {

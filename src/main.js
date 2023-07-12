@@ -1,6 +1,6 @@
 const fs = require('fs');
 const net = require('net');
-const {app, BrowserWindow, ipcMain, Menu, MenuItem} = require('electron');
+const {app, BrowserWindow, ipcMain, Menu, MenuItem, shell} = require('electron');
 const path = require('path');
 
 if (require('electron-squirrel-startup')) {
@@ -25,6 +25,26 @@ const createWindow = () => {
 
     const mainWindow = new BrowserWindow(options);
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
+
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+        if (input.type == 'keyDown') {
+            switch (input.key) {
+                case 'ArrowDown':
+                case 'ArrowUp':
+                    event.preventDefault();
+                    mainWindow.webContents.send('keydown', input.key);
+                    break;
+                case 'Backspace':
+                    mainWindow.webContents.executeJavaScript('document.activeElement.tagName').then(tag => {
+                        if (tag != 'INPUT') {
+                            event.preventDefault();
+                            mainWindow.webContents.send('keydown', input.key);
+                        }
+                    });
+                    break;
+            }
+        }
+    });
 };
 
 app.on('ready', () => {
@@ -210,4 +230,8 @@ function get(selector, domain, port, file) {
 
 ipcMain.handle('get', async (event, selector, domain, port, file) => {
     return get(selector, domain, port, file);
+});
+
+ipcMain.handle('open', async (event, url) => {
+    return shell.openExternal(url);
 });

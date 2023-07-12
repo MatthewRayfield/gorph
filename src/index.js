@@ -136,8 +136,20 @@ async function get(selector, host, port, type) {
         return;
     }
 
+    currentUrl = host;
+    if (port != 70) {
+        currentUrl += ':'+port;
+    }
+    if (type != undefined) {
+        currentUrl += '/'+type;
+    }
+    currentUrl += selector || '';
+
     if (type == '7') {
+        addressBar.value = currentUrl;
+
         if (selector.indexOf('\t') == -1) {
+            backHistory.push({selector, host, port, type});
             const searchInput = createElement('input');
             const searchLabel = createElement('label', {innerHTML: 'enter request query:'});
             searchButton = createElement('button', {innerHTML: 'search'});
@@ -168,6 +180,8 @@ async function get(selector, host, port, type) {
             const url = window.URL.createObjectURL(blob);
 
             if ('Ig:'.indexOf(type) > -1) {
+                addressBar.value = currentUrl;
+                backHistory.push({selector, host, port, type});
                 const image = createElement('img', {src: url});
                 contentElement.innerHTML = '';
                 contentElement.appendChild(image);
@@ -187,6 +201,8 @@ async function get(selector, host, port, type) {
     loading = true;
     animateLoading();
 
+    addressBar.value = currentUrl;
+
     let raw;
     try {
         raw = await window.electronAPI.get(selector, host, port);
@@ -197,33 +213,22 @@ async function get(selector, host, port, type) {
         loading = false;
         return;
     }
-    let clean = raw.replace(/</g, '&lt;');
-    clean = clean.replace(/>/g, '&gt;');
-    clean = clean.replace(/gopher:\/\/[^ \n$]+/g, "<a href=\"javascript:go('$&')\">$&</a>");
-
-    if (backHistory.length >= 1) {
-        backHistory[backHistory.length-1].scroll = contentElement.scrollTop;
-    }
     backHistory.push({selector, host, port, type});
     if (backHistory.length >= 2) {
+        backHistory[backHistory.length-2].scroll = contentElement.scrollTop;
         backButton.disabled = false;
     }
     else {
         backButton.disabled = true;
     }
 
-
-    currentUrl = host;
-    if (port != 70) {
-        currentUrl += ':'+port;
-    }
-    if (type != undefined) {
-        currentUrl += '/'+type;
-    }
-    currentUrl += selector || '';
-    addressBar.value = currentUrl;
-
     if (type == '0') {
+        let clean = raw.replace(/</g, '&lt;');
+        clean = clean.replace(/>/g, '&gt;');
+        clean = clean.replace(/gopher:\/\/[^ \n$]+/g, "<a href=\"javascript:go('$&')\">$&</a>");
+        clean = clean.replace(/https?:\/\/[^ \n$]+/g, "<a href=\"javascript:open('$&')\">$&</a>");
+        clean = clean.replace(/^\.$/m, '');
+
         contentElement.innerHTML = '<pre>'+clean;
     }
     else {
@@ -234,7 +239,7 @@ async function get(selector, host, port, type) {
         const parsed = lines.map(line => {return line.split('\t')});
 
         parsed.forEach(split => {
-            if (split.length < 4) {
+            if (split.length < 4 || split[0] == '.') {
                 return;
             }
 
@@ -280,7 +285,12 @@ async function back() {
 }
 
 async function go(url) {
-    url = url || addressBar.value;
+    if (typeof url == 'string') {
+        url = url;
+    }
+    else {
+        url = addressBar.value;
+    }
     const match = (/(gopher:\/\/)?([^:\/]+):?([0-9]+)?(\/(.)(\/?.+))?/).exec(url);
 
     const host = match[2];
@@ -292,7 +302,10 @@ async function go(url) {
     }
 
     await get(selector, host, port, type);
-    window.scrollTo(0, 0);
+}
+
+function open(url) {
+    window.electronAPI.open(url);
 }
 
 window.addEventListener('keypress', e => {
@@ -353,6 +366,19 @@ window.electronAPI.on('font', (event, change) => {
 });
 window.electronAPI.on('home', () => {homeButton.click();});
 window.electronAPI.on('bookmarks', () => {bookmarksButton.click();});
+window.electronAPI.on('keydown', (event, key) => {
+    if (key == 'ArrowUp') {
+        contentElement.scrollTop -= 20;
+    }
+    else if (key == 'ArrowDown') {
+        contentElement.scrollTop += 20;
+    }
+    else if (key == 'Backspace') {
+        if (document.activeElement.tagName != 'INPUT') {
+            back();
+        }
+    }
+});
 
 window.addEventListener('load', async () => {
     homeButton.click();
