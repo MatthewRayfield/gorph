@@ -1,3 +1,4 @@
+const version = '0.11';
 const toolbarElement = document.getElementById('toolbar');
 const backButton = document.getElementById('back');
 const addressBar = document.getElementById('address-bar');
@@ -21,6 +22,7 @@ const icons = {
     '6': '📘',
     '4': '📙',
     '7': '🔎',
+    'h': '🌎',
 };
 let backHistory = [];
 let loading = false;
@@ -56,6 +58,10 @@ function createElement(tagName, properties, children) {
     }
 
     return element;
+}
+
+function setTitle() {
+    document.title = (currentUrl ? currentUrl + ' - ' : '') + 'gorph v' + version;
 }
 
 function renderBookmarks() {
@@ -140,13 +146,14 @@ async function get(selector, host, port, type) {
     if (port != 70) {
         currentUrl += ':'+port;
     }
-    if (type != undefined) {
-        currentUrl += '/'+type;
+    if (type && selector) {
+        currentUrl += '/' + type;
     }
     currentUrl += selector || '';
 
     if (type == '7') {
         addressBar.value = currentUrl;
+        setTitle();
 
         if (selector.indexOf('\t') == -1) {
             backHistory.push({selector, host, port, type});
@@ -162,6 +169,11 @@ async function get(selector, host, port, type) {
             searchInput.focus();
             return;
         }
+    }
+    else if (type == 'h' && selector.indexOf('URL:') == 0) {
+        selector = selector.replace(/^URL:/, '');
+        open(selector);
+        return;
     }
     else {
         searchButton = undefined;
@@ -181,6 +193,8 @@ async function get(selector, host, port, type) {
 
             if ('Ig:'.indexOf(type) > -1) {
                 addressBar.value = currentUrl;
+                setTitle();
+
                 backHistory.push({selector, host, port, type});
                 const image = createElement('img', {src: url});
                 contentElement.innerHTML = '';
@@ -202,6 +216,7 @@ async function get(selector, host, port, type) {
     animateLoading();
 
     addressBar.value = currentUrl;
+    setTitle();
 
     let raw;
     try {
@@ -291,12 +306,14 @@ async function go(url) {
     else {
         url = addressBar.value;
     }
-    const match = (/(gopher:\/\/)?([^:\/]+):?([0-9]+)?(\/(.)(\/?.+))?/).exec(url);
 
+    const match = (/(gopher:\/\/)?([^:\/]+):?([0-9]+)?\/?([^\/])?(.+)?/).exec(url);
+
+    const protocol = match[1];
     const host = match[2];
     const port = parseInt(match[3]) || 70;
-    const type = match[5];
-    let selector = match[6];
+    const type = match[4];
+    let selector = match[5] || '';
     if (selector && selector[0] != '/') {
         selector = '/'+selector;
     }
@@ -308,7 +325,23 @@ function open(url) {
     window.electronAPI.open(url);
 }
 
+function addBookmark() {
+    let bookmarks;
+    try {bookmarks = JSON.parse(localStorage.getItem('bookmarks'));}
+    catch (e) {}
+    if (!bookmarks) {
+        bookmarks = defaultBookmarks;
+    }
+    bookmarks.push(currentUrl);
+    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    renderBookmarks();
+
+    bookmarksMenu.scrollTop = bookmarksMenu.scrollHeight;
+}
+
 window.addEventListener('keypress', e => {
+    console.log(e);
+
     if (e.which == 13) {
         if (document.activeElement == addressBar) {
             addressBar.blur();
@@ -316,6 +349,11 @@ window.addEventListener('keypress', e => {
         }
         else if (searchButton) {
             searchButton.click();
+        }
+    }
+    else if (e.which == 98 && !e.metaKey && !e.ctrlKey) {
+        if (bookmarksMenu.style.display == 'block') {
+            addBookmark();
         }
     }
 });
@@ -343,17 +381,7 @@ bookmarksButton.addEventListener('click', () => {
         bookmarksMenu.style.display = 'block';
     }
 });
-addBookmarkButton.addEventListener('click', () => {
-    let bookmarks;
-    try {bookmarks = JSON.parse(localStorage.getItem('bookmarks'));}
-    catch (e) {}
-    if (!bookmarks) {
-        bookmarks = defaultBookmarks;
-    }
-    bookmarks.push(currentUrl);
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-    renderBookmarks();
-});
+addBookmarkButton.addEventListener('click', addBookmark);
 window.electronAPI.on('address-bar', () => {addressBar.focus();});
 window.electronAPI.on('font', (event, change) => {
     let fontSize = parseInt(document.body.style.fontSize) || 15;
