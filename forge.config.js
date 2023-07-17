@@ -1,6 +1,8 @@
 module.exports = {
   packagerConfig: {
     asar: true,
+    icon: './icons/icon',
+    appBundleId: 'com.matthewrayfield.gorph',
   },
   rebuildConfig: {},
   makers: [

@@ -1,4 +1,4 @@
-const version = '0.12';
+const version = '1.0';
 const toolbarElement = document.getElementById('toolbar');
 const backButton = document.getElementById('back');
 const addressBar = document.getElementById('address-bar');
@@ -28,7 +28,7 @@ let backHistory = [];
 let loading = false;
 let searchButton;
 let currentUrl;
-const defaultBookmarks = ['gopher.floodgap.com', 'quux.org', 'zaibatsu.circumlunar.space'];
+const defaultBookmarks = ['sdf.org', 'gopher.floodgap.com', 'quux.org', 'zaibatsu.circumlunar.space'];
 
 function extend(target, source, deep) {
     var key;
