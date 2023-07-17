@@ -61,7 +61,7 @@ function createElement(tagName, properties, children) {
 }
 
 function setTitle() {
-    document.title = (currentUrl ? currentUrl + ' - ' : '') + 'gorph v' + version;
+    document.title = (currentUrl ? currentUrl + ' ' : '') + '( gorph v' + version + ' )';
 }
 
 function renderBookmarks() {
