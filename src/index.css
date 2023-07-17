@@ -1,6 +1,8 @@
 :root {
     --toolbar-height: 30px;
     --menu-header-height: 30px;
+    --background-color: #f7ebd7;
+    --text-color: #4f32b5;
 }
 
 textarea:focus, input:focus{
@@ -10,6 +12,13 @@ textarea:focus, input:focus{
 body {
     font: 15px monospace;
     margin: 0;
+    background: var(--background-color);
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+a {
+    color: var(--text-color);
 }
 
 #toolbar {
@@ -19,21 +28,26 @@ body {
     z-index: 10;
     width: 100vw;
     height: var(--toolbar-height);
-    background: #ccc;
+    background: var(--background-color);
     display: flex;
     justify-content: flex-start;
     align-items: stretch;
-    border-bottom: 1px solid #aaa;
+    border-bottom: 1px solid var(--text-color);
 }
 
 #toolbar button {
     font-size: 20px;
     width: 30px;
     border: none;
+    background: transparent;
+}
+
+#toolbar button:enabled {
+    cursor: pointer;
 }
 
 #toolbar button:enabled:hover {
-    background: #aaa;
+    background: #00000022;
 }
 
 #address-bar {
@@ -41,6 +55,9 @@ body {
     width: 50%;
     border: none;
     text-align: center;
+    background: transparent;
+    color: var(--text-color);
+    font-weight: bold;
 }
 
 #content {
@@ -90,23 +107,36 @@ body {
     position: absolute;
     top: calc(var(--toolbar-height) + 1px);
     right: 0;
-    height: calc(100vh - var(--toolbar-height) - 1px);
-    background: #ddd;
-    border-left: 1px solid #aaa;
+    height: calc(100vh - var(--toolbar-height) - var(--menu-header-height) - 1px);
+    background: var(--background-color);
+    border-left: 1px solid var(--text-color);
     min-width: 40vw;
     max-width: 90vw;
     overflow: scroll;
+    overflow-x: hidden;
+    padding-top: var(--menu-header-height);
 }
 
 #bookmarks-menu button {
-    margin: 3px;
+    font-size: 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+#bookmarks-menu button:hover {
+    background: #00000022;
 }
 
 #bookmarks-menu .header {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: calc(var(--toolbar-height));
     height: var(--menu-header-height);
     width: 100%;
+    background: var(--background-color);
+    border-bottom: 1px solid var(--text-color);
 }
 
 #bookmarks-menu h3 {
@@ -121,7 +151,12 @@ body {
 }
 
 #bookmarks-menu .bookmark:nth-child(odd) {
-    background: #ccc;
+    background: #00000011;
+}
+
+#bookmarks-menu .bookmark .home-icon {
+    font-size: 20px;
+    margin-left: 5px;
 }
 
 #bookmarks-menu .bookmark .button-box {

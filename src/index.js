@@ -1,4 +1,4 @@
-const version = '0.11';
+const version = '0.12';
 const toolbarElement = document.getElementById('toolbar');
 const backButton = document.getElementById('back');
 const addressBar = document.getElementById('address-bar');
@@ -78,7 +78,8 @@ function renderBookmarks() {
         const link = createElement('a', {innerHTML: url, href: 'javascript:void(0)'});
         const span = createElement('span', {}, [link]);
         if (i == 0) {
-            span.innerHTML += '&nbsp;🏠';
+            const homeIcon = createElement('span', {className: 'home-icon', innerHTML: '🏠'});
+            span.appendChild(homeIcon);
         }
         const element = createElement('div', {className: 'bookmark'}, [span]);
         const upButton = createElement('button', {innerHTML: '⬆️'});
@@ -228,6 +229,7 @@ async function get(selector, host, port, type) {
         loading = false;
         return;
     }
+
     backHistory.push({selector, host, port, type});
     if (backHistory.length >= 2) {
         backHistory[backHistory.length-2].scroll = contentElement.scrollTop;
