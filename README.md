@@ -1,7 +1,7 @@
-# gorph v1.0
+# gorph v1.1
 ## another gopher browser with a gui
 
-![gorph v1.0 screenshot](images/gorph-v1.0.png)
+![gorph v1.1 screenshot](images/gorph-v1.1.png)
 
 yeahhh it's a gopher browser made with web tech (html, css, js). yeahhh that might be dumb, but whatever. yeahhh it's an electron app so it's 200 MB. yeahhh that might be dumb, but whatever. it does the "job". it's "multiplatform". just sit back, relax, and enjoy the gopher space !
 

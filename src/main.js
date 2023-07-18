@@ -11,6 +11,7 @@ const createWindow = () => {
     const options = {
         width: 800,
         height: 600,
+        frame: false,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
         },
@@ -234,4 +235,24 @@ ipcMain.handle('get', async (event, selector, domain, port, file) => {
 
 ipcMain.handle('open', async (event, url) => {
     return shell.openExternal(url);
+});
+
+ipcMain.handle('close', async event => {
+    const focusedWindow = BrowserWindow.getFocusedWindow();
+    focusedWindow.close();
+});
+
+ipcMain.handle('min', async event => {
+    const focusedWindow = BrowserWindow.getFocusedWindow();
+    focusedWindow.minimize();
+});
+
+ipcMain.handle('max', async event => {
+    const focusedWindow = BrowserWindow.getFocusedWindow();
+    if (focusedWindow.isMaximized()) {
+        focusedWindow.unmaximize();
+    }
+    else {
+        focusedWindow.maximize();
+    }
 });

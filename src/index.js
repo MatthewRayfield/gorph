@@ -1,4 +1,4 @@
-const version = '1.0';
+const version = '1.1';
 const toolbarElement = document.getElementById('toolbar');
 const backButton = document.getElementById('back');
 const addressBar = document.getElementById('address-bar');
@@ -9,6 +9,9 @@ const contentElement = document.getElementById('content');
 const bookmarksMenu = document.getElementById('bookmarks-menu');
 const bookmarksList = document.getElementById('bookmarks-list');
 const addBookmarkButton = document.getElementById('add-bookmark');
+const closeButton = document.getElementById('close');
+const minButton = document.getElementById('min');
+const maxButton = document.getElementById('max');
 const icons = {
     'i': ' ',
     '0': '📄',
@@ -384,6 +387,15 @@ bookmarksButton.addEventListener('click', () => {
     }
 });
 addBookmarkButton.addEventListener('click', addBookmark);
+closeButton.addEventListener('click', () => {
+    window.electronAPI.close();
+});
+minButton.addEventListener('click', () => {
+    window.electronAPI.min();
+});
+maxButton.addEventListener('click', () => {
+    window.electronAPI.max();
+});
 window.electronAPI.on('address-bar', () => {addressBar.focus();});
 window.electronAPI.on('font', (event, change) => {
     let fontSize = parseInt(document.body.style.fontSize) || 15;

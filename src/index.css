@@ -1,5 +1,5 @@
 :root {
-    --toolbar-height: 30px;
+    --toolbar-height: 50px;
     --menu-header-height: 30px;
     --background-color: #f7ebd7;
     --text-color: #4f32b5;
@@ -26,20 +26,50 @@ a {
     left: 0;
     top: 0;
     z-index: 10;
-    width: 100vw;
+    width: calc(100vw - 20px);
     height: var(--toolbar-height);
     background: var(--background-color);
     display: flex;
     justify-content: flex-start;
     align-items: stretch;
     border-bottom: 1px solid var(--text-color);
+    padding: 0 10px;
+    -webkit-app-region: drag;
+}
+
+#toolbar #window-controls {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    width: 60px;
+    margin-right: 10px;
+}
+
+#toolbar #window-controls button {
+    width: 15px;
+    height: 15px;
+    border-radius: 10px;
+    padding: 0;
+
+    &#close {
+        background: #ed695e;
+    }
+    &#min {
+        background: #f4bd50;
+    }
+    &#max {
+        background: #62c454;
+    }
 }
 
 #toolbar button {
-    font-size: 20px;
-    width: 30px;
+    font-size: 25px;
+    height: 100%;
     border: none;
     background: transparent;
+    -webkit-app-region: no-drag;
 }
 
 #toolbar button:enabled {
@@ -50,14 +80,26 @@ a {
     background: #00000022;
 }
 
-#address-bar {
+#address-bar-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
     flex-grow: 1;
-    width: 50%;
-    border: none;
+}
+
+#address-bar {
+    min-width: 400px;
+    width: 70%;
+    border: 1px solid var(--text-color);
+    border-radius: 50px;
     text-align: center;
-    background: transparent;
+    text-overflow: ellipsis;
+    background: #00000011;
     color: var(--text-color);
     font-weight: bold;
+    padding: 0 10px;
+    margin: 10px 5px;
+    -webkit-app-region: no-drag;
 }
 
 #content {
