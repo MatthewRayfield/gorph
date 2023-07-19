@@ -1,4 +1,4 @@
-const version = '1.1';
+const version = '1.2';
 const toolbarElement = document.getElementById('toolbar');
 const backButton = document.getElementById('back');
 const addressBar = document.getElementById('address-bar');
@@ -12,6 +12,9 @@ const addBookmarkButton = document.getElementById('add-bookmark');
 const closeButton = document.getElementById('close');
 const minButton = document.getElementById('min');
 const maxButton = document.getElementById('max');
+const historyButton = document.getElementById('history');
+const historyMenu = document.getElementById('history-menu');
+const historyList = document.getElementById('history-list');
 const icons = {
     'i': ' ',
     '0': '📄',
@@ -67,6 +70,52 @@ function setTitle() {
     document.title = (currentUrl ? currentUrl + ' ' : '') + '( gorph v' + version + ' )';
 }
 
+function getHistory() {
+    let history;
+    try {history = JSON.parse(localStorage.getItem('history'));}
+    catch (e) {}
+
+    if (!history) {
+        history = [];
+    }
+
+    return history;
+}
+
+async function addHistory(url) {
+    if (typeof url != 'string') {
+        url = addressBar.value;
+    }
+
+    let history = getHistory();
+
+    const d = new Date();
+    history.push({
+        url,
+        time: Date.now()
+    });
+    localStorage.setItem('history', JSON.stringify(history));
+}
+
+function renderHistory() {
+    let history = getHistory();
+
+    historyList.innerHTML = '';
+    history.reverse().forEach(record => {
+        const d = new Date(record.time);
+        const timestamp = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${('0'+d.getMinutes()).slice(-2)}:${('0'+d.getSeconds()).slice(-2)}`
+        const span = createElement('span', {innerHTML: timestamp +'<br />'});
+        const link = createElement('a', {innerHTML: record.url, href: 'javascript:void(0)'});
+        span.appendChild(link);
+        link.addEventListener('click', () => {
+            historyButton.click();
+            go(record.url);
+        });
+        const element = createElement('div', {className: 'record'}, [span]);
+        historyList.appendChild(element);
+    });
+}
+
 function renderBookmarks() {
     let bookmarks;
     try {bookmarks = JSON.parse(localStorage.getItem('bookmarks'));}
@@ -79,6 +128,10 @@ function renderBookmarks() {
     bookmarksList.innerHTML = '';
     bookmarks.forEach((url, i) => {
         const link = createElement('a', {innerHTML: url, href: 'javascript:void(0)'});
+        link.addEventListener('click', () => {
+            bookmarksButton.click();
+            go(url);
+        });
         const span = createElement('span', {}, [link]);
         if (i == 0) {
             const homeIcon = createElement('span', {className: 'home-icon', innerHTML: '🏠'});
@@ -110,7 +163,6 @@ function renderBookmarks() {
         });
         const buttonBox = createElement('div', {className: 'button-box'}, [upButton, downButton, deleteButton]);
         element.appendChild(buttonBox);
-        element.addEventListener('click', () => {go(url);});
         bookmarksList.appendChild(element);
     });
 }
@@ -157,6 +209,7 @@ async function get(selector, host, port, type) {
 
     if (type == '7') {
         addressBar.value = currentUrl;
+        addHistory();
         setTitle();
 
         if (selector.indexOf('\t') == -1) {
@@ -197,6 +250,7 @@ async function get(selector, host, port, type) {
 
             if ('Ig:'.indexOf(type) > -1) {
                 addressBar.value = currentUrl;
+                addHistory();
                 setTitle();
 
                 backHistory.push({selector, host, port, type});
@@ -220,6 +274,7 @@ async function get(selector, host, port, type) {
     animateLoading();
 
     addressBar.value = currentUrl;
+    addHistory();
     setTitle();
 
     let raw;
@@ -383,12 +438,23 @@ bookmarksButton.addEventListener('click', () => {
     }
     else {
         renderBookmarks();
+        historyMenu.style.display = 'none';
         bookmarksMenu.style.display = 'block';
     }
 });
 addBookmarkButton.addEventListener('click', addBookmark);
 closeButton.addEventListener('click', () => {
     window.electronAPI.close();
+});
+historyButton.addEventListener('click', () => {
+    if (historyMenu.style.display == 'block') {
+        historyMenu.style.display = 'none';
+    }
+    else {
+        renderHistory();
+        bookmarksMenu.style.display = 'none';
+        historyMenu.style.display = 'block';
+    }
 });
 minButton.addEventListener('click', () => {
     window.electronAPI.min();
@@ -408,6 +474,7 @@ window.electronAPI.on('font', (event, change) => {
 });
 window.electronAPI.on('home', () => {homeButton.click();});
 window.electronAPI.on('bookmarks', () => {bookmarksButton.click();});
+window.electronAPI.on('history', () => {historyButton.click();});
 window.electronAPI.on('keydown', (event, key) => {
     if (key == 'ArrowUp') {
         contentElement.scrollTop -= 20;

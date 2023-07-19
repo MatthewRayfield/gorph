@@ -116,7 +116,7 @@ app.on('ready', () => {
             },
             {
                 label: 'Home',
-                accelerator: process.platform === 'darwin' ? 'Cmd+H' : 'Ctrl+H',
+                accelerator: process.platform === 'darwin' ? 'Cmd+O' : 'Ctrl+O',
                 click: () => {
                     const focusedWindow = BrowserWindow.getFocusedWindow();
                     if (focusedWindow) focusedWindow.webContents.send('home');
@@ -128,6 +128,14 @@ app.on('ready', () => {
                 click: () => {
                     const focusedWindow = BrowserWindow.getFocusedWindow();
                     if (focusedWindow) focusedWindow.webContents.send('bookmarks');
+                }
+            },
+            {
+                label: 'History',
+                accelerator: process.platform === 'darwin' ? 'Cmd+I' : 'Ctrl+I',
+                click: () => {
+                    const focusedWindow = BrowserWindow.getFocusedWindow();
+                    if (focusedWindow) focusedWindow.webContents.send('history');
                 }
             },
             {

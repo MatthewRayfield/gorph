@@ -1,4 +1,4 @@
-# gorph v1.1
+# gorph v1.2
 ## another gopher browser with a gui
 
 ![gorph v1.1 screenshot](images/gorph-v1.1.png)
@@ -14,7 +14,7 @@ yeahhh it's a gopher browser made with web tech (html, css, js). yeahhh that mig
 
 ### roadmap:
 
-- [ ] history
+- [x] history
 - [ ] url auto-complete suggestions from history
 - [ ] settings menu
 - [ ] more themes

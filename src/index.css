@@ -210,3 +210,44 @@ a {
 #bookmarks-menu .bookmark:hover .button-box {
     opacity: 1;
 }
+
+#history-menu {
+    display: none;
+    position: absolute;
+    top: calc(var(--toolbar-height) + 1px);
+    right: 0;
+    height: calc(100vh - var(--toolbar-height) - var(--menu-header-height) - 1px);
+    background: var(--background-color);
+    border-left: 1px solid var(--text-color);
+    min-width: 40vw;
+    max-width: 90vw;
+    overflow: scroll;
+    overflow-x: hidden;
+    padding-top: var(--menu-header-height);
+}
+
+#history-menu .header {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    top: calc(var(--toolbar-height));
+    height: var(--menu-header-height);
+    width: 100%;
+    background: var(--background-color);
+    border-bottom: 1px solid var(--text-color);
+}
+
+#history-menu h3 {
+    margin: 5px;
+}
+
+#history-menu .record {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px;
+}
+
+#history-menu .record:nth-child(odd) {
+    background: #00000011;
+}
