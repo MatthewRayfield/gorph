@@ -1,4 +1,4 @@
-const version = '1.2';
+const version = '1.2.1';
 const toolbarElement = document.getElementById('toolbar');
 const backButton = document.getElementById('back');
 const addressBar = document.getElementById('address-bar');
@@ -104,8 +104,9 @@ function renderHistory() {
     history.reverse().forEach(record => {
         const d = new Date(record.time);
         const timestamp = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${('0'+d.getMinutes()).slice(-2)}:${('0'+d.getSeconds()).slice(-2)}`
+        const displayUrl = record.url.replace(/\t/g, '&nbsp;&nbsp;&nbsp;');
         const span = createElement('span', {innerHTML: timestamp +'<br />'});
-        const link = createElement('a', {innerHTML: record.url, href: 'javascript:void(0)'});
+        const link = createElement('a', {innerHTML: displayUrl, href: 'javascript:void(0)'});
         span.appendChild(link);
         link.addEventListener('click', () => {
             historyButton.click();
@@ -127,7 +128,8 @@ function renderBookmarks() {
 
     bookmarksList.innerHTML = '';
     bookmarks.forEach((url, i) => {
-        const link = createElement('a', {innerHTML: url, href: 'javascript:void(0)'});
+        const displayUrl = url.replace(/\t/g, '&nbsp;&nbsp;&nbsp;');
+        const link = createElement('a', {innerHTML: displayUrl, href: 'javascript:void(0)'});
         link.addEventListener('click', () => {
             bookmarksButton.click();
             go(url);
@@ -208,11 +210,11 @@ async function get(selector, host, port, type) {
     currentUrl += selector || '';
 
     if (type == '7') {
-        addressBar.value = currentUrl;
-        addHistory();
-        setTitle();
-
         if (selector.indexOf('\t') == -1) {
+            addressBar.value = currentUrl;
+            addHistory();
+            setTitle();
+
             backHistory.push({selector, host, port, type});
             const searchInput = createElement('input');
             const searchLabel = createElement('label', {innerHTML: 'enter request query:'});

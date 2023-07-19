@@ -1,4 +1,4 @@
-# gorph v1.2
+# gorph v1.2.1
 ## another gopher browser with a gui
 
 ![gorph v1.1 screenshot](images/gorph-v1.1.png)
